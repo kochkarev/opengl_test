@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
     Texture texture1("textures/container2.png");
     Texture texture2("textures/container2_specular.png");
     
-    std::cout << glGetString(GL_VERSION);
+    std::cout << glGetString(GL_VERSION) << std::endl;
     
     while(!glfwWindowShouldClose(window))
     {
@@ -206,8 +206,8 @@ int main(int argc, char *argv[]) {
         glm::mat4 projection(1.0f);
         projection = glm::perspective(45.0f, (float)(width / height), 0.1f, 100.0f);
         
-        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-        lightPos.z = cos(glfwGetTime()) * 5.0f;
+        lightPos.x = sin(glfwGetTime() / 7.0) * 2.5f;
+        lightPos.z = cos(glfwGetTime() / 7.0) * 2.5f;
         
         glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -219,9 +219,8 @@ int main(int argc, char *argv[]) {
         glUniform3f(glGetUniformLocation(ourShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
         
         
-        
-        glUniform3f(glGetUniformLocation(ourShader.Program, "material.specular"), 0.5f, 0.5f, 0.5f);
-        glUniform1f(glGetUniformLocation(ourShader.Program, "material.shininess"), 64.0f);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "viewPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+        glUniform1f(glGetUniformLocation(ourShader.Program, "material.shininess"), 32.0f);
         
         glUniform3f(glGetUniformLocation(ourShader.Program, "pointLights[0].position"), lightPos.x, lightPos.y, lightPos.z);
         glUniform3f(glGetUniformLocation(ourShader.Program, "pointLights[0].ambient"), 0.05f, 0.05f, 0.05f);
@@ -241,7 +240,6 @@ int main(int argc, char *argv[]) {
             //if (i % 3 == 0) angle = glfwGetTime() * 50.0f;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-            
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glBindVertexArray(0);

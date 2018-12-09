@@ -42,6 +42,8 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform Material material;
 uniform DirLight dirLight;
 
+bool blinn = true;
+
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
     vec3 lightDir = normalize(-light.direction);
@@ -58,10 +60,17 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
     vec3 lightDir = normalize(light.position - fragPos);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
     float diff = max(dot(normal, lightDir), 0.0);
+    float spec;
     
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    if (blinn) {
+        spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess * 2);
+    }
+    else {
+        spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    }
     
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance +
@@ -82,7 +91,7 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     
     // Directional lights
-    vec3 result = CalcDirLight(dirLight, norm, viewDir);
+    vec3 result= CalcDirLight(dirLight, norm, viewDir);
     
     //Point lights
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
