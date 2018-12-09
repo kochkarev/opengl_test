@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); 
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -166,8 +166,10 @@ int main(int argc, char *argv[]) {
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
     
-    Texture texture1("textures/container.bmp");
-    Texture texture2("textures/lena.bmp");
+    Texture texture1("textures/container2.png");
+    Texture texture2("textures/container2_specular.png");
+    
+    std::cout << glGetString(GL_VERSION);
     
     while(!glfwWindowShouldClose(window))
     {
@@ -190,10 +192,10 @@ int main(int argc, char *argv[]) {
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1.ID);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture1"), 0);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.diffuse"), 0);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2.ID);
-        glUniform1i(glGetUniformLocation(ourShader.Program, "ourTexture2"), 1);
+        glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), 1);
         
         glm::mat4 model(1.0f);
         model = glm::rotate(model, glm::radians((GLfloat)glfwGetTime() * 50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
@@ -205,15 +207,29 @@ int main(int argc, char *argv[]) {
         projection = glm::perspective(45.0f, (float)(width / height), 0.1f, 100.0f);
         
         lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-        lightPos.z = cos(glfwGetTime() / 2.0f) * 1.0f;
+        lightPos.z = cos(glfwGetTime()) * 5.0f;
         
         glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "project"), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniform3f(glGetUniformLocation(ourShader.Program, "lightColor"), 1.0f, 1.0f, 1.0f);
-        glUniform3f(glGetUniformLocation(ourShader.Program, "objectColor"), 1.0f, 1.0f, 1.0f);
-        glUniform3f(glGetUniformLocation(ourShader.Program, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(glGetUniformLocation(ourShader.Program, "viewPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+        
+        glUniform3f(glGetUniformLocation(ourShader.Program, "dirLight.ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "dirLight.diffuse"), 0.4f, 0.4f, 0.4f);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "dirLight.specular"), 0.5f, 0.5f, 0.5f);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
+        
+        
+        
+        glUniform3f(glGetUniformLocation(ourShader.Program, "material.specular"), 0.5f, 0.5f, 0.5f);
+        glUniform1f(glGetUniformLocation(ourShader.Program, "material.shininess"), 64.0f);
+        
+        glUniform3f(glGetUniformLocation(ourShader.Program, "pointLights[0].position"), lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "pointLights[0].ambient"), 0.05f, 0.05f, 0.05f);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "pointLights[0].diffuse"), 0.8f, 0.8f, 0.8f);
+        glUniform3f(glGetUniformLocation(ourShader.Program, "pointLights[0].specular"), 1.0f, 1.0f, 1.0f);
+        glUniform1f(glGetUniformLocation(ourShader.Program, "pointLights[0].constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(ourShader.Program, "pointLights[0].linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(ourShader.Program, "pointLights[0].quadratic"), 0.032f);
 
         
         glBindVertexArray(VAO);
