@@ -83,6 +83,7 @@ int main(int argc, char *argv[]) {
     Shader lightShader("shaders/light.vert", "shaders/light.frag");
     Shader screenShader("shaders/screen.vert", "shaders/screen.frag");
     Shader skyboxShader("shaders/skybox.vert", "shaders/skybox.frag");
+    Shader reflectShader("shaders/reflect.vert", "shaders/reflect.frag");
     
     //////// CUBES /////////
     GLuint VBO, VAO;
@@ -284,6 +285,18 @@ int main(int argc, char *argv[]) {
         model = glm::mat4(1.0f);
         glUniformMatrix4fv(glGetUniformLocation(cubeShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+        
+        //////// REEFLECTING CUBE RENDER /////////
+        reflectShader.Use();
+        model = glm::translate(model, glm::vec3(0.0f, 3.0f, 0.0f));
+        glBindVertexArray(VAO);
+        glUniformMatrix4fv(glGetUniformLocation(reflectShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(reflectShader.Program, "project"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(reflectShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniform3f(glGetUniformLocation(reflectShader.Program, "cameraPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture.ID);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         
         //////// SKYBOX RENDER /////////
