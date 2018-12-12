@@ -95,7 +95,7 @@ void main()
     
     //Point lights
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        result += CalcPointLight(pointLights[0], norm, FragPos, viewDir);
+        result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
     }
     
     color = vec4(result, 1.0);

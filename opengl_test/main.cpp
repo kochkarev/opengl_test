@@ -33,6 +33,7 @@ GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 GLfloat lastX = WIDTH / 2, lastY = HEIGHT / 2;
 bool firstMouse = true;
+bool postProc = false;
 
 int main(int argc, char *argv[]) {
     
@@ -261,8 +262,12 @@ int main(int argc, char *argv[]) {
         // Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
         Do_Movement();
         
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-        glEnable(GL_DEPTH_TEST);
+        if (postProc) {
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+            glEnable(GL_DEPTH_TEST);
+        } else {
+            glEnable(GL_DEPTH_TEST);
+        }
         
         // Render
         // Clear the colorbuffer
@@ -336,20 +341,7 @@ int main(int argc, char *argv[]) {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        screenShader.Use();
-        //glUniform1i(glGetUniformLocation(screenShader.Program, "screenTexture"), 0);
-        glBindVertexArray(quadVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texColorBuffer);    // use the color attachment texture as the texture of the quad plane
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        
-        
         /*ourShader.Use();
-        
         glBindVertexArray(planeVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1.ID);
@@ -359,9 +351,21 @@ int main(int argc, char *argv[]) {
         glUniform1i(glGetUniformLocation(ourShader.Program, "material.specular"), 1);
         model = glm::mat4(1.0f);
         glUniformMatrix4fv(glGetUniformLocation(ourShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);*/
+        
+        if (postProc) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glDisable(GL_DEPTH_TEST);
+            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+            screenShader.Use();
+            //glUniform1i(glGetUniformLocation(screenShader.Program, "screenTexture"), 0);
+            glBindVertexArray(quadVAO);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texColorBuffer);    // use the color attachment texture as the texture of the quad plane
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -377,20 +381,22 @@ int main(int argc, char *argv[]) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    }
     if (key >= 0 && key < 1024)
     {
-        if(action == GLFW_PRESS)
+        if (action == GLFW_PRESS) {
             keys[key] = true;
-        else if(action == GLFW_RELEASE)
+        } else if(action == GLFW_RELEASE) {
             keys[key] = false;
+        }
     }
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    if(firstMouse) {
+    if (firstMouse) {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -413,12 +419,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void Do_Movement()
 {
-    if(keys[GLFW_KEY_W])
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if(keys[GLFW_KEY_S])
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if(keys[GLFW_KEY_A])
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if(keys[GLFW_KEY_D])
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (keys[GLFW_KEY_W]) camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (keys[GLFW_KEY_S]) camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (keys[GLFW_KEY_A]) camera.ProcessKeyboard(LEFT, deltaTime);
+    if (keys[GLFW_KEY_D]) camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (keys[GLFW_KEY_P]) postProc = !postProc;
 }
