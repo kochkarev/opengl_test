@@ -38,7 +38,7 @@ Texture::Texture(const char *path) {
 Texture::Texture(std::vector<std::string> faces) {
     
     glGenTextures(1, &ID);
-    glBindTexture(GL_TEXTURE_2D, ID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
     
     for (int i = 0; i < faces.size(); i++) {
         
@@ -54,7 +54,7 @@ Texture::Texture(std::vector<std::string> faces) {
         GLubyte* bits = (GLubyte*)FreeImage_GetBits(image);
         
         if (bits) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)bits);
         } else {
             std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
         }
