@@ -41,8 +41,9 @@ struct PointLight {
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform Material material;
 uniform DirLight dirLight;
+uniform bool blinn;
 
-bool blinn = true;
+//bool blinn = true;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {

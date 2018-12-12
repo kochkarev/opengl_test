@@ -10,6 +10,8 @@
 #define texture_hpp
 
 #include <stdio.h>
+#include <string>
+#include <vector>
 
 #include <GLFW/glfw3.h>
 #include<FreeImage.h>
@@ -17,6 +19,7 @@
 class Texture {
 public:
     Texture(const char *path);
+    Texture(std::vector<std::string> faces);
     GLuint ID;
 };
 
