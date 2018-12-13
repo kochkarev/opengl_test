@@ -25,7 +25,6 @@ struct DirLight {
     vec3 specular;
 };
 
-
 struct PointLight {
     vec3 position;
     
@@ -43,7 +42,7 @@ uniform Material material;
 uniform DirLight dirLight;
 uniform bool blinn;
 
-//bool blinn = true;
+//float CookTorrance(vec3 normal, )
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
