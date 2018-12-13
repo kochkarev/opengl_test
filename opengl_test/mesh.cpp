@@ -47,11 +47,12 @@ Cube::Cube(Shader *shader, Shader *reflShader) {
     
 }
 
-void Cube::Draw(GLuint texture, glm::mat4 projection, glm::mat4 view, glm::vec3 camera) { // reflecting cube
+void Cube::Draw(GLuint texture, glm::mat4 projection, glm::mat4 view, glm::vec3 camera, Shader depthShader) { // reflecting cube
     
     _reflShader->Use();
     glm::mat4 model(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 3.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(depthShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glBindVertexArray(VAO);
     glUniformMatrix4fv(glGetUniformLocation(_reflShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(_reflShader->Program, "project"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -63,7 +64,7 @@ void Cube::Draw(GLuint texture, glm::mat4 projection, glm::mat4 view, glm::vec3 
     
 }
 
-void Cube::Draw(GLuint diffuseMap, GLuint specMap, glm::mat4 viewMatrix, glm::mat4 projection, glm::vec3 camPos, glm::vec3 lightPos) {
+void Cube::Draw(GLuint diffuseMap, GLuint specMap, glm::mat4 viewMatrix, glm::mat4 projection, glm::vec3 camPos, glm::vec3 lightPos, Shader depthShader) {
     
     _shader->Use();
     glActiveTexture(GL_TEXTURE0);
@@ -75,9 +76,6 @@ void Cube::Draw(GLuint diffuseMap, GLuint specMap, glm::mat4 viewMatrix, glm::ma
     
     glm::mat4 model(1.0f);
     model = glm::rotate(model, glm::radians((GLfloat)glfwGetTime() * 50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-    
-    //glm::mat4 projection(1.0f);
-    //projection = glm::perspective(45.0f, (float)(buffSize.x / buffSize.y), 0.1f, 100.0f);
     
     glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -94,6 +92,7 @@ void Cube::Draw(GLuint diffuseMap, GLuint specMap, glm::mat4 viewMatrix, glm::ma
         GLfloat angle = i * 50.0f;
         //if (i % 3 == 0) angle = glfwGetTime() * 50.0f;
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            glUniformMatrix4fv(glGetUniformLocation(depthShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
@@ -117,7 +116,7 @@ Plane::Plane(Shader *shader) {
     _shader = shader;
 }
 
-void Plane::Draw(GLuint diffuseMap, GLuint specMap) {
+void Plane::Draw(GLuint diffuseMap, GLuint specMap, Shader depthShader) {
     _shader->Use();
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
@@ -128,6 +127,7 @@ void Plane::Draw(GLuint diffuseMap, GLuint specMap) {
     glUniform1i(glGetUniformLocation(_shader->Program, "material.specular"), 1);
     glm::mat4 model = glm::mat4(1.0f);
     glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(depthShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
@@ -174,7 +174,7 @@ Lamp::Lamp(Shader *shader) {
     _shader = shader;
 }
 
-void Lamp::Draw(glm::vec3 lightPos, glm::mat4 view, glm::mat4 projection) {
+void Lamp::Draw(glm::vec3 lightPos, glm::mat4 view, glm::mat4 projection, Shader depthShader) {
     _shader->Use();
     glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "project"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -182,6 +182,7 @@ void Lamp::Draw(glm::vec3 lightPos, glm::mat4 view, glm::mat4 projection) {
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.2f));
     glUniformMatrix4fv(glGetUniformLocation(_shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(depthShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);

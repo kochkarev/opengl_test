@@ -27,6 +27,7 @@
 #include "camera.hpp"
 #include "coordinates.hpp"
 #include "mesh.hpp"
+#include "macro.hpp"
 
 #define CUBES 4
 
@@ -39,6 +40,8 @@ GLfloat lastX = WIDTH / 2, lastY = HEIGHT / 2;
 bool firstMouse = true;
 bool postProc = false;
 bool blinnLight = false;
+
+const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 
 int main(int argc, char *argv[]) {
 
@@ -85,6 +88,8 @@ int main(int argc, char *argv[]) {
     Shader screenShader("shaders/screen.vert", "shaders/screen.frag");
     Shader skyboxShader("shaders/skybox.vert", "shaders/skybox.frag");
     Shader reflectShader("shaders/reflect.vert", "shaders/reflect.frag");
+    Shader depthShader("shaders/shadow.vert", "shaders/shadow.frag");
+    Shader debugShader("shaders/debugDepth.vert", "shaders/debugDepth.frag");
         
     //////// CUSTOM FRAMEBUFFER FOR POST-PROCESSING /////////
     GLuint framebuffer;
@@ -118,11 +123,17 @@ int main(int argc, char *argv[]) {
     GLuint depthMap;
     glGenTextures(1, &depthMap);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, WIDTH, HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     //////// SCREEN QUAD /////////
     GLuint quadVAO, quadVBO;
@@ -176,27 +187,38 @@ int main(int argc, char *argv[]) {
         
         lightPos.x = sin(glfwGetTime() / 7.0) * 2.7f;
         lightPos.z = cos(glfwGetTime() / 7.0) * 2.7f;
-
-        //////// CUBES RENDER /////////
-        glm::mat4 view(1.0f);
-        view = camera.GetViewMatrix();
-        glm::mat4 projection(1.0f);
-        projection = glm::perspective(45.0f, (float)(width / height), 0.1f, 100.0f);
-        cube.Draw(texture1.ID, texture2.ID, view, projection, glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z), glm::vec3(lightPos.x, lightPos.y, lightPos.z));
         
-        //////// LAMP RENDER /////////
-        lamp.Draw(lightPos, view, projection);
+        //////// RENDER SCENE TO TEXTURE //////////
+        glm::mat4 lightProjection, lightView;
+        glm::mat4 lightSpaceMatrix;
+        float near_plane = 1.0f, far_plane = 7.5f;
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+        lightView = glm::lookAt(glm::vec3(-0.2f, -1.0f, -0.3f), glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        lightSpaceMatrix = lightProjection * lightView;
         
-        //////// PLANE RENDER /////////
-        plane.Draw(floorTexture.ID, floorTexture.ID);
+        depthShader.Use();
+        glUniformMatrix4fv(glGetUniformLocation(depthShader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
         
-        //////// REEFLECTING CUBE RENDER /////////
-        cube.Draw(skyboxTexture.ID, projection, view, glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z));
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        RENDER_SCENE(depthShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        /////////////////////////////////////////////
         
-        //////// SKYBOX RENDER /////////
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-        skybox.Draw(skyboxTexture.ID, view, projection);
         
+        glViewport(0, 0, WIDTH, HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        debugShader.Use();
+        glUniform1f(glGetUniformLocation(debugShader.Program, "near_plane"), near_plane);
+        glUniform1f(glGetUniformLocation(debugShader.Program, "far_plane"), far_plane);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        
+        //RENDER_SCENE() // This macro renders cubes, lamp, plane, reflecting cube and skybox
         
         /*if (postProc) {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -215,16 +237,9 @@ int main(int argc, char *argv[]) {
         glfwPollEvents();
     }
     
-    //glDeleteVertexArrays(1, &VAO);
-    //glDeleteBuffers(1, &VBO);
-    
     glfwTerminate();
     
     return 0;
-}
-
-void renderScene(Shader cubeShader, Shader lightShader, Shader reflectShader, Shader skyboxShader) {
-    
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)

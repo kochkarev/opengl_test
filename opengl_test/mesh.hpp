@@ -24,8 +24,8 @@ public:
     Shader *_shader;
     Shader *_reflShader;
     
-    void Draw(GLuint diffuseMap, GLuint specMap, glm::mat4 viewMatrix, glm::mat4 projection, glm::vec3 camPos, glm::vec3 lightPos);
-    void Draw(GLuint texture, glm::mat4 projection, glm::mat4 view, glm::vec3 camera);
+    void Draw(GLuint diffuseMap, GLuint specMap, glm::mat4 viewMatrix, glm::mat4 projection, glm::vec3 camPos, glm::vec3 lightPos, Shader depthShader);
+    void Draw(GLuint texture, glm::mat4 projection, glm::mat4 view, glm::vec3 camera, Shader depthShader);
     
 private:
     const float cubeVertices[288] = { // vertex(3), normal(3), texture(1)
@@ -87,7 +87,7 @@ public:
     GLuint VBO;
     Shader *_shader;
     
-    void Draw(GLuint diffuseMap, GLuint specMap);
+    void Draw(GLuint diffuseMap, GLuint specMap, Shader depthShader);
 private:
     const float planeVertices[48] = { // vertex(3), normal(3), texture(2)
         5.0f, -0.5f,  5.0f, 0.0f,  1.0f,  0.0f, 2.0f, 0.0f,
@@ -161,7 +161,7 @@ public:
     GLuint VAO;
     GLuint VBO;
     
-    void Draw(glm::vec3 lightPos, glm::mat4 view, glm::mat4 projection);
+    void Draw(glm::vec3 lightPos, glm::mat4 view, glm::mat4 projection, Shader depthShader);
     
 private:
     const float cubeVertices[288] = { // vertex(3), normal(3), texture(1)
